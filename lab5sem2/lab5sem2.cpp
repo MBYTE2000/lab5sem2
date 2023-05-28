@@ -82,21 +82,43 @@ void deleteTree(Node* root) {
     delete root;
 }
 
-void deleteBranch(Node*& root, int key) {
-    if (root == nullptr)
-        return;
-
-    if (root->key == key) {
-        deleteTree(root);
-        root = nullptr;
+void individualTask(Node* root, int min, int max) {
+    if (min >= max || root == nullptr) {
+        cout << "Invalid range or empty tree." << endl;
         return;
     }
 
-    if (key < root->key)
-        deleteBranch(root->left, key);
-    else
-        deleteBranch(root->right, key);
+    int average = (min + max) / 2;
+    Node* closestNode = nullptr;
+    int minDifference = INT_MAX;
+
+    Node* current = root;
+    while (current != nullptr) {
+        int difference = abs(current->key - average);
+        if (difference < minDifference) {
+            minDifference = difference;
+            closestNode = current;
+        }
+
+        if (current->key == average) {
+            break;
+        }
+        else if (current->key < average) {
+            current = current->right;
+        }
+        else {
+            current = current->left;
+        }
+    }
+
+    if (closestNode != nullptr) {
+        cout << "Closest node - Key: " << closestNode->key << ", Data: " << closestNode->data << endl;
+    }
+    else {
+        cout << "No node found." << endl;
+    }
 }
+
 
 void displayTree(Node* root, int level = 0) {
     if (root == nullptr)
@@ -118,35 +140,42 @@ int countNodes(Node* root) {
     return countNodes(root->left) + countNodes(root->right) + 1;
 }
 
-void convertToSortedArray(Node* root, Node** arr, int* index) {
+void convertToSortedArray(Node* root, Node** arr, int& index) {
     if (root == nullptr)
         return;
+
     convertToSortedArray(root->left, arr, index);
-    arr[*index] = root;
-    (*index)++;
+    arr[index] = root;
+    index++;
     convertToSortedArray(root->right, arr, index);
 }
 
 Node* balanceTree(Node** arr, int start, int end) {
     if (start > end)
         return nullptr;
+
     int mid = (start + end) / 2;
     Node* root = arr[mid];
+
     root->left = balanceTree(arr, start, mid - 1);
     root->right = balanceTree(arr, mid + 1, end);
+
     return root;
 }
+
 
 int main() {
     Node* root = nullptr;
 
-    while (true) {
+    while (true)
+    {
         cout << "1. Insert Node\n";
         cout << "2. Search Node\n";
         cout << "3. Delete Node\n";
-        cout << "4. Delete Branch\n";
+        cout << "4. Individual Task\n";
         cout << "5. Display Tree\n";
-        cout << "6. Exit\n";
+        cout << "6. Balance\n";
+        cout << "7. Exit\n";
         cout << "Enter your choice: ";
 
         int choice;
@@ -187,11 +216,12 @@ int main() {
             break;
         }
         case 4: {
-            int key;
-            cout << "Enter key to delete branch: ";
-            cin >> key;
-            deleteBranch(root, key);
-            cout << "Branch with key " << key << " deleted.\n";
+            int max, min;
+            cout << "Max: ";
+            cin >> max;
+            cout << "Min: ";
+            cin >> min;
+            individualTask(root, min, max);
             break;
         }
         case 5: {
@@ -199,14 +229,27 @@ int main() {
             displayTree(root);
             break;
         }
-        case 6:
+        case 6: {
+            // Balancing the tree
+            Node** arr = new Node * [countNodes(root)];
+            int index = 0;
+            convertToSortedArray(root, arr, index);
+            deleteTree(root);
+            root = balanceTree(arr, 0, index - 1);
+            delete[] arr;
+
+            cout << "Tree balanced.\n";
+            break;
+        }
+        case 7:
             deleteTree(root);
             cout << "Exiting...\n";
+            cout << endl;
             return 0;
+            break;
         default:
             cout << "Invalid choice. Please try again.\n";
+            break;
         }
-
-        cout << endl;
     }
 }
